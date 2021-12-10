@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="GameBrew:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/GameBrew_jar</output-path>
+    <root id="archive" name="GameBrew.jar">
+      <element id="module-output" name="GameBrew" />
+    </root>
+  </artifact>
+</component>
