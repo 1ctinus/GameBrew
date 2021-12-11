@@ -42,8 +42,7 @@ class Editor {
         ta.setCaretColor(Color.WHITE);
         menuFile.getPopupMenu().setBackground(Color.PINK);
 menuFile.getPopupMenu().setBorder(BorderFactory.createLineBorder(new Color(40,40,40), 1));
-menuItemOpen.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
-menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
+        findTA.setBorder( BorderFactory.createLineBorder(new Color(40,40,40), 1));
     }
     private static void displayGUI() {
         String[] styledElements = {"Menu", "TextArea", "MenuBar", "MenuItem", "TextPane", "Button"};
@@ -51,6 +50,10 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
             UIManager.put(elem+".foreground", Color.WHITE);
             UIManager.put(elem+".background", new Color(50,50,50));
         }
+        UIManager.put("MenuItem.border",BorderFactory.createLineBorder(new Color(50,50,50), 1));
+        UIManager.put("PopupMenu.border",BorderFactory.createLineBorder(new Color(50,50,50), 1));
+        UIManager.put("Button.border",BorderFactory.createLineBorder(new Color(40,40,40), 1));
+        UIManager.put("TextPane.border",BorderFactory.createLineBorder(new Color(40,40,40), 1));
         ta = new JTextPane();
        frame = new JFrame("New File");
         final FileDialog fileDialog = new FileDialog(frame,"Select file");
@@ -71,12 +74,14 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
         });
         replaceTA = new JTextArea();
         JScrollPane replaceScroll = new JScrollPane(replaceTA); //place the JTextArea in a replaceScroll pane
+        replaceScroll.setBorder(BorderFactory.createEmptyBorder());
         replace.add(replaceScroll, BorderLayout.CENTER); //add the JScrollPane to the panel
 // CENTER will use up all available space
         replace.add(replaceButton, BorderLayout.EAST);
         replace.setBorder(BorderFactory.createEmptyBorder());
         replace.setVisible(false);
         JScrollPane findScroll = new JScrollPane(findTA);
+        findScroll.setBorder(BorderFactory.createEmptyBorder());
         find.add(findScroll, BorderLayout.CENTER); //add the JScrollPane to the panel
 // CENTER will use up all available space
         find.add(findButton, BorderLayout.EAST);
@@ -228,6 +233,7 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
         frame.setJMenuBar(menuBar);
         frame.add(p);
         frame.setSize(400,400);
+        frame.setIconImage(new ImageIcon("src/tinylogo.gif").getImage().getScaledInstance(24, 24, 2));
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setVisible(true);
         ta.getDocument().addDocumentListener(new DocumentListener() {
