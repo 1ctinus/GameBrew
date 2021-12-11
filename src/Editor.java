@@ -6,9 +6,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.*;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -27,7 +27,9 @@ class Editor {
     static JMenuItem menuItemReplace;
     static JMenuBar menuBar;
     static JMenu menuFile;
-    static JTextArea find;
+    static JPanel find;
+    static JTextArea findTA;
+    static JButton findButton;
     static JMenu menuEdit;
     static JPanel replace;
     static JButton replaceButton;
@@ -55,26 +57,31 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
         menuBar = new JMenuBar();
         menuFile = new JMenu("File");
         menuEdit = new JMenu("Edit");
-        find = new JTextArea(1, 10);
-        find.setVisible(false);
+        findTA = new JTextArea();
         replace = new JPanel();
         replace.setLayout(new BorderLayout());
+        find = new JPanel();
+        find.setLayout(new BorderLayout());
+        findButton = new JButton("Next");
         replaceButton = new JButton("Replace");
-        replaceButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(!Objects.equals(find.getText(), "") && !Objects.equals(replaceTA.getText(), "")) {
-                    ta.setText(ta.getText().replace(find.getText(), replaceTA.getText()));
-                }
+        replaceButton.addActionListener(e -> {
+            if(!Objects.equals(findTA.getText(), "") && !Objects.equals(replaceTA.getText(), "")) {
+                ta.setText(ta.getText().replace(findTA.getText(), replaceTA.getText()));
             }
         });
         replaceTA = new JTextArea();
-        JScrollPane scroll = new JScrollPane(replaceTA); //place the JTextArea in a scroll pane
-        replace.add(scroll, BorderLayout.CENTER); //add the JScrollPane to the panel
+        JScrollPane replaceScroll = new JScrollPane(replaceTA); //place the JTextArea in a replaceScroll pane
+        replace.add(replaceScroll, BorderLayout.CENTER); //add the JScrollPane to the panel
 // CENTER will use up all available space
         replace.add(replaceButton, BorderLayout.EAST);
         replace.setBorder(BorderFactory.createEmptyBorder());
         replace.setVisible(false);
+        JScrollPane findScroll = new JScrollPane(findTA);
+        find.add(findScroll, BorderLayout.CENTER); //add the JScrollPane to the panel
+// CENTER will use up all available space
+        find.add(findButton, BorderLayout.EAST);
+        find.setBorder(BorderFactory.createEmptyBorder());
+        find.setVisible(false);
         menuFile.setMnemonic(KeyEvent.VK_F);
         menuBar.add(menuFile);
         menuBar.add(menuEdit);
@@ -97,50 +104,40 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
         menuItemSave.setAccelerator(keyStrokeToSave);
         menuItemFind.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
         menuItemReplace.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK));
-        menuItemOpen.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                fileDialog.setVisible(true);
-                if (fileDialog.getFile() != null) {
-                    currentFile = fileDialog.getDirectory() + fileDialog.getFile();
-                    File myObj = new File(fileDialog.getDirectory() + fileDialog.getFile());
-                    byte[] encoded;
-                    try {
-                        encoded = Files.readAllBytes(Paths.get(currentFile));
-                        ta.setText(new String(encoded));
-                    } catch (IOException e) {
-                        ta.setText("");
-                    }
-                    frame.setTitle(currentFile);
+        menuItemOpen.addActionListener(evt -> {
+            fileDialog.setVisible(true);
+            if (fileDialog.getFile() != null) {
+                currentFile = fileDialog.getDirectory() + fileDialog.getFile();
+                byte[] encoded;
+                try {
+                    encoded = Files.readAllBytes(Paths.get(currentFile));
+                    ta.setText(new String(encoded));
+                } catch (IOException e) {
+                    ta.setText("");
                 }
+                frame.setTitle(currentFile);
             }
         });
-        menuItemFind.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                find.setVisible(!find.isVisible());
-                currentWord[0] = 0;
-            }
+        menuItemFind.addActionListener(evt -> {
+            find.setVisible(!find.isVisible());
+            currentWord[0] = 0;
         });
-        menuItemReplace.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                find.setVisible(!replace.isVisible());
-                replace.setVisible(!replace.isVisible());
-            }
+        menuItemReplace.addActionListener(e -> {
+            find.setVisible(!replace.isVisible());
+            replace.setVisible(!replace.isVisible());
         });
-        menuItemSave.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                if(!Objects.equals(currentFile, "")){
-                    try {
-                        System.out.println("i am running");
-                        FileWriter myWriter = new FileWriter(currentFile);
-                        myWriter.write(ta.getText());
-                        myWriter.close();
-                        frame.setTitle(currentFile);
-                        System.out.println("Successfully wrote to the file.");
-                    } catch (IOException e) {
-                        System.out.println("An error occurred.");
-                        e.printStackTrace();
-                    }
+        menuItemSave.addActionListener(evt -> {
+            if(!Objects.equals(currentFile, "")){
+                try {
+                    System.out.println("i am running");
+                    FileWriter myWriter = new FileWriter(currentFile);
+                    myWriter.write(ta.getText());
+                    myWriter.close();
+                    frame.setTitle(currentFile);
+                    System.out.println("Successfully wrote to the file.");
+                } catch (IOException e) {
+                    System.out.println("An error occurred.");
+                    e.printStackTrace();
                 }
             }
         });
@@ -148,15 +145,18 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
         lines.setEditable(false);
         UndoTool.addUndoFunctionality(ta);
         final JScrollPane[] jsp = {new JScrollPane(ta)};
-        find.setMaximumSize(new Dimension(Integer.MAX_VALUE, find.getMinimumSize().height));
-        replace.setMaximumSize(new Dimension(Integer.MAX_VALUE, find.getMinimumSize().height));
-        replaceButton.setPreferredSize(new Dimension(replaceButton.getPreferredSize().width, find.getMinimumSize().height));
+        findTA.setMaximumSize(new Dimension(Integer.MAX_VALUE, findTA.getMinimumSize().height));
+        replace.setMaximumSize(new Dimension(Integer.MAX_VALUE, findTA.getMinimumSize().height));
+           find.setMaximumSize(new Dimension(Integer.MAX_VALUE, findTA.getMinimumSize().height));
+
+        replaceButton.setPreferredSize(new Dimension(replaceButton.getPreferredSize().width, findTA.getMinimumSize().height));
+        findButton.setPreferredSize(new Dimension(replaceButton.getPreferredSize().width, findTA.getMinimumSize().height));
 //        ((FlowLayout)replace.getLayout()).setVgap(0);
-        find.getDocument().addDocumentListener(new DocumentListener() {
+        findTA.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
                 try {
-                    Highlighting.highlightFind(ta, find.getText(), 0);
+                    Highlighting.highlightFind(ta, findTA.getText(), 0);
                 } catch (BadLocationException ex) {
                     ex.printStackTrace();
                 }
@@ -165,8 +165,8 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
             @Override
             public void removeUpdate(DocumentEvent e) {
                 try {
-                    if(!Objects.equals(find.getText(), "")) {
-                        Highlighting.highlightFind(ta, find.getText(), 0);
+                    if(!Objects.equals(findTA.getText(), "")) {
+                        Highlighting.highlightFind(ta, findTA.getText(), 0);
                     } else {
                         ta.getHighlighter().removeAllHighlights();
                     }
@@ -182,16 +182,17 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
         });
         Action sendAction = new AbstractAction("Send"){
             public void actionPerformed(ActionEvent ae){
-                            currentWord[0] += 1;
+                            currentWord[0]++;
                             try {
-                                Highlighting.highlightFind(ta, find.getText(), currentWord[0]);
+                                Highlighting.highlightFind(ta, findTA.getText(), currentWord[0]);
                             } catch (BadLocationException ex) {
                                 ex.printStackTrace();
                             }
                         }}
         ;
-        find.registerKeyboardAction(sendAction,
-                KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);;
+        findButton.addActionListener(sendAction);
+        findTA.registerKeyboardAction(sendAction,
+                KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
         jsp[0].setBorder(BorderFactory.createLineBorder(new Color(30,30,30)));
         ta.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         lines.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
@@ -265,12 +266,7 @@ menuItemSave.setBorder(BorderFactory.createLineBorder(new Color(50,50,50), 1));
         });
     }
     public static void main(String[] a) {
-        Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                displayGUI();
-            }
-        };
+        Runnable r = Editor::displayGUI;
         SwingUtilities.invokeLater(r);
     }
 }
